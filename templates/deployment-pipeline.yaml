@@ -176,6 +176,7 @@ Resources:
           artifacts:
             files:
               - service/build/install/**/*
+              - service/security/**/*
               - source-version.text
               - Dockerfile
       Environment:
