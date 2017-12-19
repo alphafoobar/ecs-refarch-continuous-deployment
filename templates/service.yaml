@@ -62,7 +62,7 @@ Resources:
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Repository}:${Tag}
           Essential: true
           Cpu: 10
-          Memory: 500
+          MemoryReservation: 1024
           PortMappings:
             - ContainerPort: 80
           LogConfiguration:
