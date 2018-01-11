@@ -1,0 +1,26 @@
+[
+  {
+    "ParameterKey": "KeyName",
+    "ParameterValue": "kaizen7-ecs"
+  },
+  {
+    "ParameterKey": "InstanceType",
+    "ParameterValue": "t2.micro"
+  },
+  {
+    "ParameterKey": "S3Region",
+    "ParameterValue": "ap-southeast-2"
+  },
+  {
+    "ParameterKey": "S3TemplateBucket",
+    "ParameterValue": "ecs-continuous-deployment-lunch-demo"
+  },
+  {
+    "ParameterKey": "GitHubUser",
+    "ParameterValue": "alphafoobar"
+  },
+  {
+    "ParameterKey": "GitHubToken",
+    "ParameterValue": "<place-holder-for-token>"
+  }
+]

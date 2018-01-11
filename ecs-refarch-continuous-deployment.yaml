@@ -24,10 +24,36 @@ Parameters:
     Description: >
       Token for the user specified above. (https://github.com/settings/tokens)
 
+  InstanceType:
+    Type: String
+    Default: t2.micro
+    AllowedValues: [t2.nano, t2.micro, t2.small, t2.medium, t2.large, t2.xlarge, t2.2xlarge, m3.medium, m3.large, m3.xlarge, m3.2xlarge, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge]
+    Description: The size of the instance host that will run the Docker images.
+
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+  S3Region:
+    Type: String
+    Default: "ap-southeast-2"
+    AllowedValues : ["us-west-2", "us-west-1", "ap-south-1", "ap-southeast-1", "ap-southeast-2", "ap-northeast-1"]
+    Description: S3 Region where bucket resides (ap-southeast-2 is Sydney)
+
+  S3TemplateBucket:
+    Type: String
+    Description: S3 Bucket containing templates.zip (requires versioning on)
 
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterLabels:
+      KeyName:
+        default: "AWS SSH KeyName"
+      InstanceType:
+        default: "AWS Instance type"
+      S3Region:
+        default: "S3 Region"
       GitHubUser:
         default: "User"
       GitHubRepo:
@@ -44,22 +70,33 @@ Metadata:
           - GitHubBranch
           - GitHubUser
           - GitHubToken
+      - Label:
+          default: AWS container stuff
+        Parameters:
+          - KeyName
+          - InstanceType
+      - Label:
+          default: S3 Configuration
+        Parameters:
+          - S3Region
 
 
 Resources:
   Cluster:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/ecs-refarch-continuous-deployment-v2-us-east-1/templates/ecs-cluster.yaml
+      TemplateURL: !Sub https://s3-${S3Region}.amazonaws.com/${S3TemplateBucket}/templates/ecs-cluster.yaml
       Parameters:
         SourceSecurityGroup: !GetAtt LoadBalancer.Outputs.SecurityGroup
         Subnets: !GetAtt VPC.Outputs.Subnets
         VpcId: !GetAtt VPC.Outputs.VpcId
+        KeyName: !Ref KeyName
+        InstanceType: !Ref InstanceType
 
   DeploymentPipeline:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/ecs-refarch-continuous-deployment-v2-us-east-1/templates/deployment-pipeline.yaml
+      TemplateURL: !Sub https://s3-${S3Region}.amazonaws.com/${S3TemplateBucket}/templates/deployment-pipeline.yaml
       Parameters:
         Cluster: !GetAtt Cluster.Outputs.ClusterName
         Service: !GetAtt Service.Outputs.ServiceName
@@ -71,7 +108,7 @@ Resources:
   LoadBalancer:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/ecs-refarch-continuous-deployment-v2-us-east-1/templates/load-balancer.yaml
+      TemplateURL: !Sub https://s3-${S3Region}.amazonaws.com/${S3TemplateBucket}/templates/load-balancer.yaml
       Parameters:
         Subnets: !GetAtt VPC.Outputs.Subnets
         VpcId: !GetAtt VPC.Outputs.VpcId
@@ -79,7 +116,7 @@ Resources:
   VPC:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/ecs-refarch-continuous-deployment-v2-us-east-1/templates/vpc.yaml
+      TemplateURL: !Sub https://s3-${S3Region}.amazonaws.com/${S3TemplateBucket}/templates/vpc.yaml
       Parameters:
         Name: !Ref AWS::StackName
         VpcCIDR: 10.215.0.0/16
@@ -89,7 +126,7 @@ Resources:
   Service:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/ecs-refarch-continuous-deployment-v2-us-east-1/templates/service.yaml
+      TemplateURL: !Sub https://s3-${S3Region}.amazonaws.com/${S3TemplateBucket}/templates/service.yaml
       Parameters:
         Cluster: !GetAtt Cluster.Outputs.ClusterName
         TargetGroup: !GetAtt LoadBalancer.Outputs.TargetGroup
