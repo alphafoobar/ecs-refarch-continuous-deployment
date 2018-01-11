@@ -21,23 +21,23 @@ regions=(
 
 for region in "${regions[@]}"
 do
-  aws s3api head-bucket --bucket "${bucket}-${region}" --region "$region" ||
-    aws s3 mb "s3://${bucket}-${region}" --region "$region"
+  aws s3api head-bucket --bucket "${bucket}" --region "$region" ||
+    aws s3 mb "s3://${bucket}" --region "$region"
 
   aws s3api put-bucket-policy \
-    --bucket "${bucket}-${region}" \
-    --policy "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":[\"s3:GetObject\",\"s3:GetObjectVersion\"],\"Resource\":\"arn:aws:s3:::${bucket}-${region}/*\"},{\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":[\"s3:ListBucket\",\"s3:GetBucketVersioning\"],\"Resource\":\"arn:aws:s3:::${bucket}-${region}\"}]}" \
+    --bucket "${bucket}" \
+    --policy "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":[\"s3:GetObject\",\"s3:GetObjectVersion\"],\"Resource\":\"arn:aws:s3:::${bucket}/*\"},{\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":[\"s3:ListBucket\",\"s3:GetBucketVersioning\"],\"Resource\":\"arn:aws:s3:::${bucket}\"}]}" \
     --region "$region"
 
   aws s3api put-bucket-versioning \
-    --bucket "${bucket}-${region}" \
+    --bucket "${bucket}" \
     --versioning-configuration Status=Enabled \
     --region "$region"
 
-  aws s3 cp ecs-refarch-continuous-deployment.yaml "s3://${bucket}-${region}" \
+  aws s3 cp ecs-refarch-continuous-deployment.yaml "s3://${bucket}" \
     --region "$region"
 
-  aws s3 cp --recursive templates/ "s3://${bucket}-${region}/templates" \
+  aws s3 cp --recursive templates/ "s3://${bucket}/templates" \
     --region "$region"
 
   aws cloudformation create-stack --capabilities CAPABILITY_IAM --stack-name "demo-${DATE}" --template-body file://ecs-refarch-continuous-deployment.yaml \
