@@ -83,6 +83,10 @@ Resources:
       SecurityGroupIngress:
         - SourceSecurityGroupId: !Ref SourceSecurityGroup
           IpProtocol: -1
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
       VpcId: !Ref VpcId
 
   Cluster:
@@ -155,13 +159,15 @@ Resources:
       IamInstanceProfile: !Ref InstanceProfile
       SecurityGroups:
         - !Ref SecurityGroup
+      # KeyName see http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/quickref-ecs.html
+      # To create a key in AWS ec2 console: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#having-ec2-create-your-key-pair
+      KeyName: !Ref 'KeyName'
       UserData:
         "Fn::Base64": !Sub |
           #!/bin/bash
           yum install -y aws-cfn-bootstrap
           /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource LaunchConfiguration
           /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource AutoScalingGroup
-
 
 Outputs:
   ClusterName:
